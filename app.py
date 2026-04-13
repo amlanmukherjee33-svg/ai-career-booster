@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import razorpay
+from datetime import datetime, timedelta
 
 # -------------------------------
 # Load env
@@ -39,30 +40,44 @@ USAGE_LIMIT = 2
 # Helpers
 # -------------------------------
 def is_paid_user():
-    return request.cookies.get("paid_user") == "true"
+    paid_until = request.cookies.get("paid_until")
+
+    if not paid_until:
+        return False
+
+    try:
+        expiry = datetime.strptime(paid_until, "%Y-%m-%d %H:%M:%S")
+        return datetime.utcnow() < expiry
+    except:
+        return False
+
 
 def check_usage():
     return int(request.cookies.get("usage_count", 0))
+
 
 def update_usage(response, usage):
     response.set_cookie(
         "usage_count",
         str(usage + 1),
-        max_age=60*60*24,  # 1 day
+        max_age=60*60*24,
         httponly=True,
-        secure=True,              # 🔥 REQUIRED FOR HTTPS (Render)
-        samesite="None"           # 🔥 REQUIRED FOR cross-site
+        secure=True,
+        samesite="None"
     )
     return response
 
-def set_paid_user(response):
+
+def set_subscription(response, days=30):
+    expiry_date = datetime.utcnow() + timedelta(days=days)
+
     response.set_cookie(
-        "paid_user",
-        "true",
-        max_age=60*60*24*30,  # 30 days
+        "paid_until",
+        expiry_date.strftime("%Y-%m-%d %H:%M:%S"),
+        max_age=60*60*24*days,
         httponly=True,
-        secure=True,          # 🔥 REQUIRED
-        samesite="None"       # 🔥 REQUIRED
+        secure=True,
+        samesite="None"
     )
     return response
 
@@ -98,7 +113,7 @@ def verify_payment():
         razorpay_client.utility.verify_payment_signature(params_dict)
 
         response = make_response(jsonify({"status": "success"}))
-        return set_paid_user(response)
+        return set_subscription(response, days=30)  # 🔥 30-day access
 
     except Exception:
         return jsonify({"status": "failed"}), 400
@@ -114,7 +129,6 @@ def handle_ai_request(system_msg, user_msg):
     paid = is_paid_user()
     usage = check_usage()
 
-    # DEBUG (optional)
     print("PAID:", paid, "USAGE:", usage)
 
     if not paid and usage >= USAGE_LIMIT:
