@@ -98,8 +98,8 @@
 
     <div class="card">
         <h2>Skill Gap Analyzer</h2>
-        <input id="gapSkills" placeholder="Your current skills">
-        <input id="targetRole" placeholder="Target role">
+        <input id="gapSkills">
+        <input id="targetRole">
         <button onclick="getSkillGap(event)">Analyze Skill Gap</button>
         <div id="gapResult" class="result"></div>
     </div>
@@ -167,13 +167,13 @@ async function startPayment() {
     new Razorpay(options).open();
 }
 
-// RESPONSE HANDLER (FIXED)
-function handleResponse(data) {
-    if (data.error) {
+// 🚨 CRITICAL FIX HERE
+async function handleFetch(res) {
+    if (res.status === 403) {
         showPaymentModal();
-        return data.error;
+        return null;
     }
-    return data.result;
+    return await res.json();
 }
 
 // LOADING
@@ -184,7 +184,7 @@ function setLoading(button, resultDiv, isLoading) {
         resultDiv.innerText = "⏳ Working...";
     } else {
         button.disabled = false;
-        button.innerText = button.getAttribute("data-original") || "Submit";
+        button.innerText = button.getAttribute("data-original");
     }
 }
 
@@ -203,8 +203,8 @@ async function optimizeResume(e) {
         body: JSON.stringify({ resume: document.getElementById("resume").value })
     });
 
-    let data = await res.json();
-    div.innerText = handleResponse(data);
+    let data = await handleFetch(res);
+    if (data) div.innerText = data.result;
 
     setLoading(btn, div, false);
 }
@@ -223,8 +223,8 @@ async function getResumeScore(e) {
         body: JSON.stringify({ resume: document.getElementById("resumeScoreInput").value })
     });
 
-    let data = await res.json();
-    div.innerText = handleResponse(data);
+    let data = await handleFetch(res);
+    if (data) div.innerText = data.result;
 
     setLoading(btn, div, false);
 }
@@ -243,8 +243,8 @@ async function getSuggestions(e) {
         body: JSON.stringify({ skills: document.getElementById("skills").value })
     });
 
-    let data = await res.json();
-    div.innerText = handleResponse(data);
+    let data = await handleFetch(res);
+    if (data) div.innerText = data.result;
 
     setLoading(btn, div, false);
 }
@@ -266,8 +266,8 @@ async function getSkillGap(e) {
         })
     });
 
-    let data = await res.json();
-    div.innerText = handleResponse(data);
+    let data = await handleFetch(res);
+    if (data) div.innerText = data.result;
 
     setLoading(btn, div, false);
 }
