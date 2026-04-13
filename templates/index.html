@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>AI Career Booster</title>
 
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
@@ -58,7 +60,6 @@
             white-space: pre-wrap;
         }
 
-        /* Modal */
         #paymentModal {
             display: none;
             position: fixed;
@@ -122,18 +123,14 @@
         <h2>Unlock Full Access 🚀</h2>
         <p>Pay ₹99 for unlimited usage</p>
 
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=yourupi@bank&pn=AI%20Career%20Booster&am=99">
-
-        <p>Scan & Pay via UPI</p>
-
-        <button onclick="confirmPayment()">I Have Paid</button>
+        <button onclick="startPayment()">Pay Now</button>
         <button onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
 <script>
 
-// -------- PAYMENT FUNCTIONS --------
+// -------- PAYMENT --------
 function showPaymentModal() {
     document.getElementById("paymentModal").style.display = "block";
 }
@@ -142,10 +139,34 @@ function closeModal() {
     document.getElementById("paymentModal").style.display = "none";
 }
 
-function confirmPayment() {
-    localStorage.setItem("paidUser", "true");
-    alert("Access unlocked!");
-    closeModal();
+async function startPayment() {
+
+    let res = await fetch("/create-order", { method: "POST" });
+    let order = await res.json();
+
+    var options = {
+        "key": "rzp_live_Sd4g8Pzsvf9FDt",
+        "amount": order.amount,
+        "currency": "INR",
+        "name": "AI Career Booster",
+        "description": "Unlimited Access",
+        "order_id": order.id,
+
+        handler: async function (response) {
+
+            await fetch("/verify-payment", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(response)
+            });
+
+            alert("Payment successful! Access unlocked.");
+            closeModal();
+        }
+    };
+
+    var rzp = new Razorpay(options);
+    rzp.open();
 }
 
 // -------- RESPONSE HANDLER --------
@@ -154,7 +175,7 @@ function handleResponse(data, key) {
         showPaymentModal();
         return data.error;
     }
-    return data[key] || "Something went wrong.";
+    return data.result || "Something went wrong.";
 }
 
 // -------- LOADING --------
@@ -170,14 +191,14 @@ function setLoading(button, resultDiv, isLoading) {
     }
 }
 
-// -------- API CALLS --------
+// -------- HEADERS --------
 function getHeaders() {
     return {
-        "Content-Type": "application/json",
-        "X-PAID-USER": localStorage.getItem("paidUser") || "false"
+        "Content-Type": "application/json"
     };
 }
 
+// -------- API CALLS --------
 async function optimizeResume(event) {
     let button = event.target;
     let resultDiv = document.getElementById("optimizedResult");
