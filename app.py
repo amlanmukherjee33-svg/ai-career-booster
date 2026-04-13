@@ -68,7 +68,15 @@ def update_usage(response, usage):
     return response
 
 
-def set_subscription(response, days=30):
+def set_subscription(response, plan):
+    # 🔥 PLAN LOGIC HERE
+    if plan == "lifetime":
+        days = 3650   # ~10 years
+    elif plan == "monthly":
+        days = 30
+    else:
+        days = 30  # fallback safety
+
     expiry_date = datetime.utcnow() + timedelta(days=days)
 
     response.set_cookie(
@@ -82,22 +90,27 @@ def set_subscription(response, days=30):
     return response
 
 # -------------------------------
-# Payment Route
+# Payment Route (UPDATED)
 # -------------------------------
 @app.route("/create-order", methods=["POST"])
 def create_order():
     try:
+        data = request.get_json()
+        amount = data.get("amount", 9900)
+
         order = razorpay_client.order.create({
-            "amount": 9900,
+            "amount": amount,
             "currency": "INR",
             "payment_capture": 1
         })
+
         return jsonify(order)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # -------------------------------
-# Verify Payment
+# Verify Payment (UPDATED)
 # -------------------------------
 @app.route("/verify-payment", methods=["POST"])
 def verify_payment():
@@ -109,11 +122,13 @@ def verify_payment():
         'razorpay_signature': data.get('razorpay_signature')
     }
 
+    plan = data.get("plan", "monthly")  # 🔥 IMPORTANT
+
     try:
         razorpay_client.utility.verify_payment_signature(params_dict)
 
         response = make_response(jsonify({"status": "success"}))
-        return set_subscription(response, days=30)  # 🔥 30-day access
+        return set_subscription(response, plan)
 
     except Exception:
         return jsonify({"status": "failed"}), 400
