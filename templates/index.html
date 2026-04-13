@@ -154,14 +154,20 @@ async function startPayment() {
 
         handler: async function (response) {
 
-            await fetch("/verify-payment", {
+            let verifyRes = await fetch("/verify-payment", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(response)
             });
 
-            alert("Payment successful! Access unlocked.");
-            closeModal();
+            let verifyData = await verifyRes.json();
+
+            if (verifyData.status === "success") {
+                alert("✅ Payment verified! Access unlocked.");
+                closeModal();
+            } else {
+                alert("❌ Payment verification failed.");
+            }
         }
     };
 
@@ -170,7 +176,7 @@ async function startPayment() {
 }
 
 // -------- RESPONSE HANDLER --------
-function handleResponse(data, key) {
+function handleResponse(data) {
     if (data.error) {
         showPaymentModal();
         return data.error;
@@ -213,7 +219,7 @@ async function optimizeResume(event) {
     });
 
     let data = await res.json();
-    resultDiv.innerText = handleResponse(data, "optimized_resume");
+    resultDiv.innerText = handleResponse(data);
 
     setLoading(button, resultDiv, false);
 }
@@ -232,7 +238,7 @@ async function getResumeScore(event) {
     });
 
     let data = await res.json();
-    resultDiv.innerText = handleResponse(data, "resume_score");
+    resultDiv.innerText = handleResponse(data);
 
     setLoading(button, resultDiv, false);
 }
@@ -251,7 +257,7 @@ async function getSuggestions(event) {
     });
 
     let data = await res.json();
-    resultDiv.innerText = handleResponse(data, "suggested_roles");
+    resultDiv.innerText = handleResponse(data);
 
     setLoading(button, resultDiv, false);
 }
@@ -271,7 +277,7 @@ async function getSkillGap(event) {
     });
 
     let data = await res.json();
-    resultDiv.innerText = handleResponse(data, "skill_gap_analysis");
+    resultDiv.innerText = handleResponse(data);
 
     setLoading(button, resultDiv, false);
 }
