@@ -50,7 +50,8 @@ def update_usage(response, usage):
         str(usage + 1),
         max_age=60*60*24,  # 1 day
         httponly=True,
-        samesite="Lax"
+        secure=True,              # 🔥 REQUIRED FOR HTTPS (Render)
+        samesite="None"           # 🔥 REQUIRED FOR cross-site
     )
     return response
 
@@ -60,7 +61,8 @@ def set_paid_user(response):
         "true",
         max_age=60*60*24*30,  # 30 days
         httponly=True,
-        samesite="Lax"
+        secure=True,          # 🔥 REQUIRED
+        samesite="None"       # 🔥 REQUIRED
     )
     return response
 
@@ -111,6 +113,9 @@ def handle_ai_request(system_msg, user_msg):
 
     paid = is_paid_user()
     usage = check_usage()
+
+    # DEBUG (optional)
+    print("PAID:", paid, "USAGE:", usage)
 
     if not paid and usage >= USAGE_LIMIT:
         return None, jsonify({"error": "Free limit reached"}), 403
