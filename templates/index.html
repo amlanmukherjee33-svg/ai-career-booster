@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Career Booster</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px;
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 15px;
+            background: #f1f5ff;
+            padding: 10px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+
+        /* Modal */
+        #paymentModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+        }
+
+        #paymentBox {
+            background: white;
+            padding: 20px;
+            max-width: 400px;
+            margin: 100px auto;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🚀 AI Career Booster</h1>
+
+    <div class="card">
+        <h2>Resume Optimizer</h2>
+        <textarea id="resume"></textarea>
+        <button onclick="optimizeResume(event)">Optimize Resume</button>
+        <div id="optimizedResult" class="result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Resume Score</h2>
+        <textarea id="resumeScoreInput"></textarea>
+        <button onclick="getResumeScore(event)">Get Resume Score</button>
+        <div id="scoreResult" class="result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Career Suggestions</h2>
+        <input id="skills">
+        <button onclick="getSuggestions(event)">Get Suggestions</button>
+        <div id="suggestionsResult" class="result"></div>
+    </div>
+
+    <div class="card">
+        <h2>Skill Gap Analyzer</h2>
+        <input id="gapSkills" placeholder="Your current skills">
+        <input id="targetRole" placeholder="Target role">
+        <button onclick="getSkillGap(event)">Analyze Skill Gap</button>
+        <div id="gapResult" class="result"></div>
+    </div>
+
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="paymentModal">
+    <div id="paymentBox">
+        <h2>Unlock Full Access 🚀</h2>
+        <p>Pay ₹99 for unlimited usage</p>
+
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=yourupi@bank&pn=AI%20Career%20Booster&am=99">
+
+        <p>Scan & Pay via UPI</p>
+
+        <button onclick="confirmPayment()">I Have Paid</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+
+// -------- PAYMENT FUNCTIONS --------
+function showPaymentModal() {
+    document.getElementById("paymentModal").style.display = "block";
+}
+
+function closeModal() {
+    document.getElementById("paymentModal").style.display = "none";
+}
+
+function confirmPayment() {
+    localStorage.setItem("paidUser", "true");
+    alert("Access unlocked!");
+    closeModal();
+}
+
+// -------- RESPONSE HANDLER --------
+function handleResponse(data, key) {
+    if (data.error) {
+        showPaymentModal();
+        return data.error;
+    }
+    return data[key] || "Something went wrong.";
+}
+
+// -------- LOADING --------
+function setLoading(button, resultDiv, isLoading) {
+    if (isLoading) {
+        button.disabled = true;
+        button.setAttribute("data-original", button.innerText);
+        button.innerText = "⏳ Processing...";
+        resultDiv.innerText = "⏳ Working on it...";
+    } else {
+        button.disabled = false;
+        button.innerText = button.getAttribute("data-original");
+    }
+}
+
+// -------- API CALLS --------
+function getHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "X-PAID-USER": localStorage.getItem("paidUser") || "false"
+    };
+}
+
+async function optimizeResume(event) {
+    let button = event.target;
+    let resultDiv = document.getElementById("optimizedResult");
+    let resume = document.getElementById("resume").value;
+
+    setLoading(button, resultDiv, true);
+
+    let res = await fetch("/optimize-resume", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ resume })
+    });
+
+    let data = await res.json();
+    resultDiv.innerText = handleResponse(data, "optimized_resume");
+
+    setLoading(button, resultDiv, false);
+}
+
+async function getResumeScore(event) {
+    let button = event.target;
+    let resultDiv = document.getElementById("scoreResult");
+    let resume = document.getElementById("resumeScoreInput").value;
+
+    setLoading(button, resultDiv, true);
+
+    let res = await fetch("/resume-score", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ resume })
+    });
+
+    let data = await res.json();
+    resultDiv.innerText = handleResponse(data, "resume_score");
+
+    setLoading(button, resultDiv, false);
+}
+
+async function getSuggestions(event) {
+    let button = event.target;
+    let resultDiv = document.getElementById("suggestionsResult");
+    let skills = document.getElementById("skills").value.split(",");
+
+    setLoading(button, resultDiv, true);
+
+    let res = await fetch("/career-suggestions", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ skills })
+    });
+
+    let data = await res.json();
+    resultDiv.innerText = handleResponse(data, "suggested_roles");
+
+    setLoading(button, resultDiv, false);
+}
+
+async function getSkillGap(event) {
+    let button = event.target;
+    let resultDiv = document.getElementById("gapResult");
+    let skills = document.getElementById("gapSkills").value;
+    let role = document.getElementById("targetRole").value;
+
+    setLoading(button, resultDiv, true);
+
+    let res = await fetch("/skill-gap", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ skills, role })
+    });
+
+    let data = await res.json();
+    resultDiv.innerText = handleResponse(data, "skill_gap_analysis");
+
+    setLoading(button, resultDiv, false);
+}
+
+</script>
+
+</body>
+</html>
