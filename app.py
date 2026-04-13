@@ -45,17 +45,33 @@ def check_usage():
     return int(request.cookies.get("usage_count", 0))
 
 def update_usage(response, usage):
-    response.set_cookie("usage_count", str(usage + 1), httponly=True)
+    response.set_cookie(
+        "usage_count",
+        str(usage + 1),
+        max_age=60*60*24,  # 1 day
+        httponly=True,
+        samesite="Lax"
+    )
+    return response
+
+def set_paid_user(response):
+    response.set_cookie(
+        "paid_user",
+        "true",
+        max_age=60*60*24*30,  # 30 days
+        httponly=True,
+        samesite="Lax"
+    )
     return response
 
 # -------------------------------
-# CREATE ORDER
+# Payment Route
 # -------------------------------
 @app.route("/create-order", methods=["POST"])
 def create_order():
     try:
         order = razorpay_client.order.create({
-            "amount": 9900,  # ₹99
+            "amount": 9900,
             "currency": "INR",
             "payment_capture": 1
         })
@@ -64,53 +80,26 @@ def create_order():
         return jsonify({"error": str(e)}), 500
 
 # -------------------------------
-# VERIFY PAYMENT (SECURE 🔒)
+# Verify Payment
 # -------------------------------
 @app.route("/verify-payment", methods=["POST"])
 def verify_payment():
     data = request.get_json()
 
-    razorpay_order_id = data.get("razorpay_order_id")
-    razorpay_payment_id = data.get("razorpay_payment_id")
-    razorpay_signature = data.get("razorpay_signature")
-
-    # 🚨 Basic validation
-    if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
-        return jsonify({"status": "failed", "reason": "missing fields"}), 400
-
     params_dict = {
-        "razorpay_order_id": razorpay_order_id,
-        "razorpay_payment_id": razorpay_payment_id,
-        "razorpay_signature": razorpay_signature
+        'razorpay_order_id': data.get('razorpay_order_id'),
+        'razorpay_payment_id': data.get('razorpay_payment_id'),
+        'razorpay_signature': data.get('razorpay_signature')
     }
 
     try:
-        # 🔒 Signature verification (CRITICAL)
         razorpay_client.utility.verify_payment_signature(params_dict)
 
-        # ✅ Optional: fetch payment to double verify
-        payment = razorpay_client.payment.fetch(razorpay_payment_id)
+        response = make_response(jsonify({"status": "success"}))
+        return set_paid_user(response)
 
-        if payment["status"] != "captured":
-            return jsonify({"status": "failed", "reason": "payment not captured"}), 400
-
-        # ✅ SUCCESS → unlock user
-        response = make_response(jsonify({
-            "status": "success"
-        }))
-
-        # 🍪 Secure cookie
-        response.set_cookie(
-            "paid_user",
-            "true",
-            httponly=True,
-            samesite="Lax"
-        )
-
-        return response
-
-    except Exception as e:
-        return jsonify({"status": "failed", "reason": str(e)}), 400
+    except Exception:
+        return jsonify({"status": "failed"}), 400
 
 # -------------------------------
 @app.route("/")
@@ -120,42 +109,34 @@ def home():
 # -------------------------------
 def handle_ai_request(system_msg, user_msg):
 
-    if not is_paid_user():
-        usage = check_usage()
-        if usage >= USAGE_LIMIT:
-            return None, jsonify({"error": "Free limit reached"}), 403
-    else:
-        usage = 0
+    paid = is_paid_user()
+    usage = check_usage()
 
-    try:
-        response_ai = client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "system", "content": system_msg},
-                {"role": "user", "content": user_msg}
-            ]
-        )
+    if not paid and usage >= USAGE_LIMIT:
+        return None, jsonify({"error": "Free limit reached"}), 403
 
-        response = make_response(jsonify({
-            "result": response_ai.choices[0].message.content
-        }))
+    response_ai = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_msg}
+        ]
+    )
 
-        if not is_paid_user():
-            return update_usage(response, usage), None, None
+    response = make_response(jsonify({
+        "result": response_ai.choices[0].message.content
+    }))
 
-        return response, None, None
+    if not paid:
+        return update_usage(response, usage), None, None
 
-    except Exception as e:
-        return None, jsonify({"error": str(e)}), 500
+    return response, None, None
 
 # -------------------------------
 @app.route("/optimize-resume", methods=["POST"])
 def optimize_resume():
     data = request.get_json()
-    res, err, code = handle_ai_request(
-        "You are a resume optimizer",
-        data.get("resume", "")
-    )
+    res, err, code = handle_ai_request("You are a resume optimizer", data.get("resume", ""))
     if err:
         return err, code
     return res
@@ -164,10 +145,7 @@ def optimize_resume():
 @app.route("/resume-score", methods=["POST"])
 def resume_score():
     data = request.get_json()
-    res, err, code = handle_ai_request(
-        "You are a resume reviewer",
-        data.get("resume", "")
-    )
+    res, err, code = handle_ai_request("You are a resume reviewer", data.get("resume", ""))
     if err:
         return err, code
     return res
@@ -176,10 +154,7 @@ def resume_score():
 @app.route("/career-suggestions", methods=["POST"])
 def career_suggestions():
     data = request.get_json()
-    res, err, code = handle_ai_request(
-        "You are a career advisor",
-        str(data.get("skills", ""))
-    )
+    res, err, code = handle_ai_request("You are a career advisor", str(data.get("skills", "")))
     if err:
         return err, code
     return res
