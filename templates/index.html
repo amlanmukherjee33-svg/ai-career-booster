@@ -1,158 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Career Booster</title>
+<meta charset="UTF-8">
+<title>AI Career Booster</title>
 
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
 
-        h1 {
-            text-align: center;
-            color: white;
-        }
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+}
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
+h1 {
+    text-align: center;
+    color: white;
+}
 
-        textarea, input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-        }
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
 
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
-        }
+textarea, input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
 
-        .result {
-            margin-top: 10px;
-            background: #f1f5ff;
-            padding: 10px;
-            white-space: pre-wrap;
-        }
+button {
+    margin-top: 15px;
+    padding: 12px;
+    width: 100%;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
 
-        /* MODAL */
-        #paymentModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 9999;
-        }
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
-        #paymentBox {
-            background: white;
-            padding: 20px;
-            max-width: 420px;
-            margin: 100px auto;
-            border-radius: 10px;
-            text-align: center;
-        }
-    </style>
+.result {
+    margin-top: 15px;
+    background: #f1f5ff;
+    padding: 10px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+}
+
+/* MODAL */
+#paymentModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+}
+
+#paymentBox {
+    background: white;
+    padding: 20px;
+    max-width: 420px;
+    margin: 100px auto;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.plan-btn {
+    background: #4CAF50;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <h1>🚀 AI Career Booster</h1>
+<h1>🚀 AI Career Booster</h1>
 
-    <!-- Resume Optimizer -->
-    <div class="card">
-        <h2>Resume Optimizer</h2>
-        <textarea id="resume"></textarea>
-        <button onclick="optimizeResume()">Optimize Resume</button>
-        <div id="optimizedResult" class="result"></div>
-    </div>
+<div class="card">
+<h2>Resume Optimizer</h2>
+<textarea id="resume"></textarea>
+<button onclick="optimizeResume(event)">Optimize Resume</button>
+<div id="optimizedResult" class="result"></div>
+</div>
 
-    <!-- Resume Score -->
-    <div class="card">
-        <h2>Resume Score</h2>
-        <textarea id="resumeScoreInput"></textarea>
-        <button onclick="getResumeScore()">Get Resume Score</button>
-        <div id="scoreResult" class="result"></div>
-    </div>
+<div class="card">
+<h2>Resume Score</h2>
+<textarea id="resumeScoreInput"></textarea>
+<button onclick="getResumeScore(event)">Get Resume Score</button>
+<div id="scoreResult" class="result"></div>
+</div>
 
-    <!-- Career Suggestions -->
-    <div class="card">
-        <h2>Career Suggestions</h2>
-        <input id="skills" placeholder="Enter your skills">
-        <button onclick="getSuggestions()">Get Suggestions</button>
-        <div id="suggestionsResult" class="result"></div>
-    </div>
+<div class="card">
+<h2>Career Suggestions</h2>
+<input id="skills">
+<button onclick="getSuggestions(event)">Get Suggestions</button>
+<div id="suggestionsResult" class="result"></div>
+</div>
 
-    <!-- Skill Gap -->
-    <div class="card">
-        <h2>Skill Gap Analyzer</h2>
-        <input id="gapSkills" placeholder="Your skills">
-        <input id="targetRole" placeholder="Target role">
-        <button onclick="getSkillGap()">Analyze Skill Gap</button>
-        <div id="gapResult" class="result"></div>
-    </div>
+<div class="card">
+<h2>Skill Gap Analyzer</h2>
+<input id="gapSkills">
+<input id="targetRole">
+<button onclick="getSkillGap(event)">Analyze Skill Gap</button>
+<div id="gapResult" class="result"></div>
+</div>
 
 </div>
 
 <!-- PAYMENT MODAL -->
 <div id="paymentModal">
-    <div id="paymentBox">
+<div id="paymentBox">
 
-        <h2>🚫 Free Limit Reached</h2>
-        <p>You’ve used your free attempts.</p>
+<h2>🚫 Free Limit Reached</h2>
+<p>You’ve used your free attempts.</p>
 
-        <hr>
+<hr>
 
-        <p style="text-align:left;">
-            ✔ Resume rewrite<br>
-            ✔ ATS score boost<br>
-            ✔ Career suggestions<br>
-            ✔ Skill roadmap
-        </p>
+<p style="text-align:left;">
+✔ Resume rewrite<br>
+✔ ATS score boost<br>
+✔ Career suggestions<br>
+✔ Skill roadmap
+</p>
 
-        <hr>
+<hr>
 
-        <p style="color:red;"><b>🔥 ₹99 Lifetime (limited)</b></p>
+<p style="color:red;"><b>🔥 ₹99 Lifetime (limited)</b></p>
 
-        <button onclick="startPayment('lifetime', 9900)">
-            🚀 Lifetime — ₹99
-        </button>
+<button class="plan-btn" onclick="startPayment('lifetime', 9900)">
+🚀 Lifetime — ₹99
+</button>
 
-        <button onclick="startPayment('monthly', 29900)">
-            💼 Monthly — ₹299
-        </button>
+<button onclick="startPayment('monthly', 29900)">
+💼 Monthly — ₹299
+</button>
 
-        <button onclick="closeModal()">Cancel</button>
+<button onclick="closeModal()">Cancel</button>
 
-    </div>
+</div>
 </div>
 
 <script>
-
-// ALWAYS HIDE MODAL
-window.onload = function() {
-    document.getElementById("paymentModal").style.display = "none";
-};
 
 // MODAL CONTROL
 function showPaymentModal() {
@@ -161,6 +171,18 @@ function showPaymentModal() {
 
 function closeModal() {
     document.getElementById("paymentModal").style.display = "none";
+}
+
+// LOADING SYSTEM
+function setLoading(button, resultDiv, isLoading) {
+    if (isLoading) {
+        button.disabled = true;
+        button.innerText = "⏳ Working...";
+        resultDiv.innerText = "⏳ Please wait...";
+    } else {
+        button.disabled = false;
+        button.innerText = button.getAttribute("data-original");
+    }
 }
 
 // PAYMENT
@@ -195,7 +217,7 @@ async function startPayment(plan, amount) {
             let verifyData = await verifyRes.json();
 
             if (verifyData.status === "success") {
-                alert("Payment successful");
+                alert("✅ Payment successful!");
                 closeModal();
             }
         }
@@ -213,51 +235,75 @@ async function handleFetch(res) {
     return await res.json();
 }
 
-// API CALLS
+// API FUNCTIONS
 
-async function optimizeResume() {
+async function optimizeResume(e) {
+    let btn = e.target;
+    let div = document.getElementById("optimizedResult");
+    btn.setAttribute("data-original", btn.innerText);
+
+    setLoading(btn, div, true);
+
     let res = await fetch("/optimize-resume", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            resume: document.getElementById("resume").value
-        })
+        body: JSON.stringify({ resume: document.getElementById("resume").value })
     });
 
     let data = await handleFetch(res);
-    if (data) document.getElementById("optimizedResult").innerText = data.result;
+    if (data) div.innerText = data.result;
+
+    setLoading(btn, div, false);
 }
 
-async function getResumeScore() {
+async function getResumeScore(e) {
+    let btn = e.target;
+    let div = document.getElementById("scoreResult");
+    btn.setAttribute("data-original", btn.innerText);
+
+    setLoading(btn, div, true);
+
     let res = await fetch("/resume-score", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            resume: document.getElementById("resumeScoreInput").value
-        })
+        body: JSON.stringify({ resume: document.getElementById("resumeScoreInput").value })
     });
 
     let data = await handleFetch(res);
-    if (data) document.getElementById("scoreResult").innerText = data.result;
+    if (data) div.innerText = data.result;
+
+    setLoading(btn, div, false);
 }
 
-async function getSuggestions() {
+async function getSuggestions(e) {
+    let btn = e.target;
+    let div = document.getElementById("suggestionsResult");
+    btn.setAttribute("data-original", btn.innerText);
+
+    setLoading(btn, div, true);
+
     let res = await fetch("/career-suggestions", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            skills: document.getElementById("skills").value
-        })
+        body: JSON.stringify({ skills: document.getElementById("skills").value })
     });
 
     let data = await handleFetch(res);
-    if (data) document.getElementById("suggestionsResult").innerText = data.result;
+    if (data) div.innerText = data.result;
+
+    setLoading(btn, div, false);
 }
 
-async function getSkillGap() {
+async function getSkillGap(e) {
+    let btn = e.target;
+    let div = document.getElementById("gapResult");
+    btn.setAttribute("data-original", btn.innerText);
+
+    setLoading(btn, div, true);
+
     let res = await fetch("/skill-gap", {
         method: "POST",
         credentials: "include",
@@ -269,7 +315,9 @@ async function getSkillGap() {
     });
 
     let data = await handleFetch(res);
-    if (data) document.getElementById("gapResult").innerText = data.result;
+    if (data) div.innerText = data.result;
+
+    setLoading(btn, div, false);
 }
 
 </script>
