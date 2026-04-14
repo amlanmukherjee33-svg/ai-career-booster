@@ -1,43 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Career Booster</title>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 10px;
+            background: #f1f5ff;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+
+        /* 🔥 FIXED MODAL */
+        #paymentModal {
+            display: none; /* CRITICAL */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+        }
+
+        #paymentBox {
+            background: white;
+            padding: 20px;
+            max-width: 420px;
+            margin: 100px auto;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🚀 AI Career Booster</h1>
+
+    <div class="card">
+        <h2>Resume Optimizer</h2>
+        <textarea id="resume"></textarea>
+        <button onclick="optimizeResume(event)">Optimize Resume</button>
+        <div id="optimizedResult" class="result"></div>
+    </div>
+</div>
+
+<!-- ✅ FIXED PAYMENT MODAL -->
 <div id="paymentModal">
     <div id="paymentBox">
 
-        <h2 style="margin-bottom:10px;">🚫 Free Limit Reached</h2>
+        <h2>🚫 Free Limit Reached</h2>
+        <p>You’ve used your free attempts.</p>
 
-        <p style="font-size:14px; color:#555;">
-            You’ve used your free attempts.
+        <hr>
+
+        <p style="text-align:left;">
+            ✔ Resume rewrite<br>
+            ✔ ATS score boost<br>
+            ✔ Career suggestions<br>
+            ✔ Skill roadmap
         </p>
 
-        <hr style="margin:15px 0;">
+        <hr>
 
-        <div style="text-align:left; font-size:14px; line-height:1.6;">
-            <strong>🔓 What you unlock:</strong><br>
-            ✔ Professionally rewritten resume<br>
-            ✔ Higher ATS score (get shortlisted faster)<br>
-            ✔ Personalized career suggestions<br>
-            ✔ Skill gap roadmap to reach your target role
-        </div>
+        <p style="color:red;"><b>🔥 ₹99 Lifetime (limited)</b></p>
 
-        <hr style="margin:15px 0;">
-
-        <p style="color:red; font-weight:bold;">
-            🔥 Limited Offer: ₹99 Lifetime (7 days only)
-        </p>
-
-        <button class="plan-btn" onclick="startPayment('lifetime', 9900)">
-            🚀 Get Lifetime Access for ₹99
+        <button onclick="startPayment('lifetime', 9900)">
+            🚀 Lifetime — ₹99
         </button>
 
         <button onclick="startPayment('monthly', 29900)">
-            💼 Go Pro — ₹299/month
+            💼 Monthly — ₹299
         </button>
 
-        <button style="background:#ccc; color:black;" onclick="closeModal()">
-            Cancel
-        </button>
-
-        <p style="font-size:12px; color:gray; margin-top:10px;">
-            🔒 Secure payment via Razorpay
-        </p>
+        <button onclick="closeModal()">Cancel</button>
 
     </div>
 </div>
+
+<script>
+
+// 🔥 ALWAYS HIDE ON LOAD
+window.onload = function() {
+    closeModal();
+};
+
+// SHOW MODAL
+function showPaymentModal() {
+    document.getElementById("paymentModal").style.display = "block";
+}
+
+// CLOSE MODAL
+function closeModal() {
+    document.getElementById("paymentModal").style.display = "none";
+}
+
+// PAYMENT
+async function startPayment(plan, amount) {
+
+    let res = await fetch("/create-order", {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ amount, plan })
+    });
+
+    let order = await res.json();
+
+    var options = {
+        key: "rzp_live_Sd4g8Pzsvf9FDt",
+        amount: order.amount,
+        currency: "INR",
+        name: "AI Career Booster",
+        description: plan,
+        order_id: order.id,
+
+        handler: async function (response) {
+
+            let verifyRes = await fetch("/verify-payment", {
+                method: "POST",
+                credentials: "include",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({...response, plan})
+            });
+
+            let verifyData = await verifyRes.json();
+
+            if (verifyData.status === "success") {
+                alert("Payment successful");
+                closeModal();
+            }
+        }
+    };
+
+    new Razorpay(options).open();
+}
+
+// HANDLE LIMIT
+async function handleFetch(res) {
+    if (res.status === 403) {
+        showPaymentModal();
+        return null;
+    }
+    return await res.json();
+}
+
+// API
+async function optimizeResume(e) {
+
+    let res = await fetch("/optimize-resume", {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ resume: document.getElementById("resume").value })
+    });
+
+    let data = await handleFetch(res);
+
+    if (data) {
+        document.getElementById("optimizedResult").innerText = data.result;
+    }
+}
+
+</script>
+
+</body>
+</html>
