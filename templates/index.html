@@ -51,9 +51,9 @@
             white-space: pre-wrap;
         }
 
-        /* 🔥 FIXED MODAL */
+        /* ✅ CRITICAL FIX — MODAL HIDDEN BY DEFAULT */
         #paymentModal {
-            display: none; /* CRITICAL */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -82,16 +82,17 @@
     <div class="card">
         <h2>Resume Optimizer</h2>
         <textarea id="resume"></textarea>
-        <button onclick="optimizeResume(event)">Optimize Resume</button>
+        <button onclick="optimizeResume()">Optimize Resume</button>
         <div id="optimizedResult" class="result"></div>
     </div>
 </div>
 
-<!-- ✅ FIXED PAYMENT MODAL -->
+<!-- ✅ PAYMENT MODAL (FIXED) -->
 <div id="paymentModal">
     <div id="paymentBox">
 
         <h2>🚫 Free Limit Reached</h2>
+
         <p>You’ve used your free attempts.</p>
 
         <hr>
@@ -122,9 +123,9 @@
 
 <script>
 
-// 🔥 ALWAYS HIDE ON LOAD
+// ✅ CRITICAL SAFETY — ALWAYS HIDE MODAL ON LOAD
 window.onload = function() {
-    closeModal();
+    document.getElementById("paymentModal").style.display = "none";
 };
 
 // SHOW MODAL
@@ -178,7 +179,7 @@ async function startPayment(plan, amount) {
     new Razorpay(options).open();
 }
 
-// HANDLE LIMIT
+// HANDLE LIMIT RESPONSE
 async function handleFetch(res) {
     if (res.status === 403) {
         showPaymentModal();
@@ -187,14 +188,16 @@ async function handleFetch(res) {
     return await res.json();
 }
 
-// API
-async function optimizeResume(e) {
+// MAIN FUNCTION
+async function optimizeResume() {
 
     let res = await fetch("/optimize-resume", {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ resume: document.getElementById("resume").value })
+        body: JSON.stringify({
+            resume: document.getElementById("resume").value
+        })
     });
 
     let data = await handleFetch(res);
