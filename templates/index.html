@@ -1,37 +1,43 @@
-<!-- ONLY SHOWING UPDATED PAYMENT BOX PART -->
-
 <div id="paymentModal">
     <div id="paymentBox">
 
-        <h2>🚫 Free Limit Reached</h2>
+        <h2 style="margin-bottom:10px;">🚫 Free Limit Reached</h2>
 
-        <p style="font-size:14px;">
+        <p style="font-size:14px; color:#555;">
             You’ve used your free attempts.
         </p>
 
-        <hr>
+        <hr style="margin:15px 0;">
 
-        <p style="text-align:left; font-size:14px;">
-            🔓 What you unlock:
-            <br>✔ Professionally rewritten resume
-            <br>✔ Higher ATS score (get shortlisted faster)
-            <br>✔ Personalized career suggestions
-            <br>✔ Skill gap roadmap to reach your target role
+        <div style="text-align:left; font-size:14px; line-height:1.6;">
+            <strong>🔓 What you unlock:</strong><br>
+            ✔ Professionally rewritten resume<br>
+            ✔ Higher ATS score (get shortlisted faster)<br>
+            ✔ Personalized career suggestions<br>
+            ✔ Skill gap roadmap to reach your target role
+        </div>
+
+        <hr style="margin:15px 0;">
+
+        <p style="color:red; font-weight:bold;">
+            🔥 Limited Offer: ₹99 Lifetime (7 days only)
         </p>
 
-        <hr>
-
-        <p class="tag">🔥 Limited Offer: ₹99 Lifetime (7 days only)</p>
-
         <button class="plan-btn" onclick="startPayment('lifetime', 9900)">
-            🚀 Unlock Lifetime Access — ₹99
+            🚀 Get Lifetime Access for ₹99
         </button>
 
         <button onclick="startPayment('monthly', 29900)">
             💼 Go Pro — ₹299/month
         </button>
 
-        <button onclick="closeModal()">Cancel</button>
+        <button style="background:#ccc; color:black;" onclick="closeModal()">
+            Cancel
+        </button>
+
+        <p style="font-size:12px; color:gray; margin-top:10px;">
+            🔒 Secure payment via Razorpay
+        </p>
 
     </div>
 </div>
