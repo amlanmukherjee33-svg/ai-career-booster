@@ -69,13 +69,12 @@ def update_usage(response, usage):
 
 
 def set_subscription(response, plan):
-    # 🔥 PLAN LOGIC HERE
     if plan == "lifetime":
-        days = 3650   # ~10 years
+        days = 3650
     elif plan == "monthly":
         days = 30
     else:
-        days = 30  # fallback safety
+        days = 30
 
     expiry_date = datetime.utcnow() + timedelta(days=days)
 
@@ -89,8 +88,6 @@ def set_subscription(response, plan):
     )
     return response
 
-# -------------------------------
-# Payment Route (UPDATED)
 # -------------------------------
 @app.route("/create-order", methods=["POST"])
 def create_order():
@@ -110,8 +107,6 @@ def create_order():
         return jsonify({"error": str(e)}), 500
 
 # -------------------------------
-# Verify Payment (UPDATED)
-# -------------------------------
 @app.route("/verify-payment", methods=["POST"])
 def verify_payment():
     data = request.get_json()
@@ -122,7 +117,7 @@ def verify_payment():
         'razorpay_signature': data.get('razorpay_signature')
     }
 
-    plan = data.get("plan", "monthly")  # 🔥 IMPORTANT
+    plan = data.get("plan", "monthly")
 
     try:
         razorpay_client.utility.verify_payment_signature(params_dict)
@@ -176,10 +171,36 @@ def optimize_resume():
     return res
 
 # -------------------------------
+# 🔥 FIXED RESUME SCORE (IMPORTANT)
 @app.route("/resume-score", methods=["POST"])
 def resume_score():
     data = request.get_json()
-    res, err, code = handle_ai_request("You are a resume reviewer", data.get("resume", ""))
+
+    prompt = """
+You are a strict resume evaluator.
+
+Analyze the resume and return output in EXACT format:
+
+Resume Score: X/100
+
+Breakdown:
+- Formatting: X/10
+- Keywords: X/10
+- Experience: X/10
+- Impact: X/10
+
+Improvements:
+- Point 1
+- Point 2
+- Point 3
+
+Rules:
+- MUST include a numeric score out of 100
+- Keep it structured
+- No long paragraphs
+"""
+
+    res, err, code = handle_ai_request(prompt, data.get("resume", ""))
     if err:
         return err, code
     return res
